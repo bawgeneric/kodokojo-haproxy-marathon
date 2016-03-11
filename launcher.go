@@ -48,7 +48,7 @@ func main() {
 		*marathonCallbackUrl = "http://" + ip.String() + portStr + "/callback"
 	}
 
-	marathonEventChannel := make(chan commons.MarathonEvent,5)
+	marathonEventChannel := make(chan commons.MarathonEvent, 5)
 
 	config := commons.NewConfiguration(*projectName, *haProxyCfgPath, *marathonUrl, *marathonCallbackUrl, *port, *templatePath)
 	locator := marathon.NewMarathonServiceLocator(config.MarathonUrl())
@@ -56,7 +56,6 @@ func main() {
 	generator := haproxy.NewHaProxyConfigurator(*templatePath, sslStore)
 	applicationState := haproxy.NewApplicationsState(config, locator, generator, commons.HaProxyContext{})
 	applicationState.Start(marathonEventChannel)
-
 
 	marathon.RegisterMarathon(config)
 
