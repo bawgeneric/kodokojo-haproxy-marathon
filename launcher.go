@@ -15,7 +15,7 @@ func main() {
 
 	port := flag.Int("httpPort", 8080, "port number to listen")
 	marathonUrl := flag.String("marathonUrl", "http://localhost:8080", "Url to connect to Marathon API")
-	haProxyCfgPath := flag.String("haProxyCfgPath", "/Users/jpthiery/workspace/go/src/github.com/kodokojo/kodokojo-haproxy-marathon//haproxy.cfg", "HaProxy.cfg configuration Path")
+	haProxyCfgPath := flag.String("haProxyCfgPath", "/usr/local/etc/haproxy/haproxy.cfg", "haproxy.cfg configuration Path")
 	marathonCallbackUrl := flag.String("marathonCallbackUrl", "", "Marathon callback Url which will be registered on marathon")
 	templatePath := flag.String("templatePath", "", "Path to the template file use to generate HA proxy configuration")
 	projectName := flag.String("projectName", "", "Project name to listen - Not used in this version.")

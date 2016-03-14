@@ -68,10 +68,15 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 			}
 		}
 	}
-	reload := exec.Command("sh", "-c", "\"", "haproxy -f "+configuration.HaProxyCfgPath()+" -p /tmp/haproxy.pid -sf $(cat /tmp/haproxy.pid)", "\"")
+	pidData,_:=ioutil.ReadFile("/tmp/haproxy.pid")
+	pid := string(pidData)
+	reload := exec.Command("/usr/local/sbin/haproxy", "-D", "-f", configuration.HaProxyCfgPath(), "-p" ,"/tmp/haproxy.pid","-sf", pid)
+	stdErr, _ := reload.StderrPipe()
+
 	err := reload.Run()
 	if err != nil {
-		log.Println("Error while trying to reload HA proxy wiht command", "'sh -c \"haproxy -f "+configuration.HaProxyCfgPath()+" -p /tmp/haproxy.pid -sf $(cat /tmp/haproxy.pid)\"'", err)
+		log.Println("Error while trying to reload HA proxy wiht command'", "/usr/local/sbin/haproxy -D -f "+configuration.HaProxyCfgPath()+" -p /tmp/haproxy.pid -sf " +pid,"' :", err)
+		log.Println(stdErr)
 	}
 }
 
@@ -91,8 +96,8 @@ func check(e error) {
 
 const defaultHaProxyTemplate string = `global
 	maxconn 4096
-	log {{ .SyslogEntryPoint }}   local0
-	log {{ .SyslogEntryPoint }}   local1 info
+	log 192.168.99.100 local0
+	log 192.168.99.100 local1 info
 
 defaults
 
@@ -107,6 +112,10 @@ frontend http-in
 	mode    http
 	bind *:80
 	reqadd X-Forwarded-Proto:\ http
+{{range .Projects}}{{if .IsHTTPReady}}# BEGIN entries project {{.ProjectName}}{{$projectName := .ProjectName}}{{range .HaProxyHTTPEntries}}
+	acl host_{{$projectName}}_{{.EntryName}} hdr_beg(host) -i {{.EntryName}}.{{$projectName}}{{end}}{{range .HaProxyHTTPEntries}}
+	use_backend {{.EntryName}}-{{$projectName}}-cluster-http if host_{{$projectName}}_{{.EntryName}}{{end}}
+# END entries project {{.ProjectName}}{{end}}{{end}}
 
 frontend https-in
 	log     global
