@@ -61,7 +61,7 @@ func main() {
 	log.Println("Marathon url		:", config.MarathonUrl())
 	log.Println("Marathon callback		:", config.MarathonCallbackUrl())
 
-	services, _ := locator.LocateAllService()
+	services := locator.LocateAllService()
 	applicationState.UpdateServicesIfConfigurationChanged(services)
 
 	marathon.RegisterMarathon(config)

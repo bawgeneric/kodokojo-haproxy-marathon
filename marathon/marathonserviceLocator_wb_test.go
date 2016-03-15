@@ -10,9 +10,8 @@ func Test_valid_extract_from_json(t *testing.T) {
 
 	jsonInput := GetValidJson()
 	marathonServiceLocator := marathon.NewMarathonServiceLocator("http://localhost:8080")
-	services, success := marathonServiceLocator.ExtractServiceFromJson([]byte(jsonInput))
+	services := marathonServiceLocator.ExtractServiceFromJson([]byte(jsonInput))
 
-	assert.True(t, success)
 	assert.NotEmpty(t, services)
 	assert.Equal(t, 2, len(services))
 
@@ -21,14 +20,11 @@ func Test_valid_extract_from_json(t *testing.T) {
 		assert.Equal(t, 1, len(service.HaProxyHTTPEntries))
 
 		httpEntry := service.HaProxyHTTPEntries[0]
-		t.Log("Parsing entry", httpEntry.EntryName)
-		t.Log("Backend :", httpEntry.Backends)
+		assert.Equal(t, 1, len(httpEntry.Backends))
 		if httpEntry.EntryName == "scm" {
-			assert.Equal(t, 1, len(httpEntry.Backends))
 			assert.Equal(t, 1, len(service.HaProxySSHEntries))
-			sshEntry := service.HaProxySSHEntries[0]
-			t.Log("SSH entry", sshEntry.EntryName)
-			t.Log("SSH backend", sshEntry.Backends)
+		} else if httpEntry.EntryName == "ci" {
+			assert.Equal(t, 0, len(service.HaProxySSHEntries))
 		}
 	}
 

@@ -44,8 +44,8 @@ func (a *ApplicationsState) handleMarathonEventInHaProxyConfiguration(marathonEv
 
 	if projectName != "" {
 		if entityType != "" {
-			services, filledService := a.serviceLocator.LocateServiceByProject(projectName)
-			if filledService {
+			services := a.serviceLocator.LocateServiceByProject(projectName)
+			if len(services) > 0 {
 				previous, found := a.findProjectInHaProxyContext(a.haProxyCurrentContext, projectName)
 				if found {
 					if previous.LastChangedAd.Before(marathonEvent.Timestamp) {

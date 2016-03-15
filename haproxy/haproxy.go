@@ -60,23 +60,28 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 					os.Create(sskKeyPath)
 					err := ioutil.WriteFile(sskKeyPath, sslKeyContent, 0600)
 					h.cache[key] = sslKeyContent
+					log.Println("Retrive a SSL certificate for key", key)
 					if err != nil {
 						log.Println("Unable to write SSL file", sskKeyPath, err)
 					}
 				}
 			} else {
-				log.Println("Found following ssl for key", key)
+				log.Println("Found an existing SSL certificate for key", key)
 			}
 		}
 	}
 	pidData, _ := ioutil.ReadFile("/tmp/haproxy.pid")
 	pid := string(pidData)
+
 	reload := exec.Command("/usr/local/sbin/haproxy", "-D", "-f", configuration.HaProxyCfgPath(), "-p", "/tmp/haproxy.pid", "-sf", pid)
+
+	stdOut, _ := reload.StdoutPipe()
 	stdErr, _ := reload.StderrPipe()
 
 	err := reload.Run()
 	if err != nil {
 		log.Println("Error while trying to reload HA proxy wiht command'", "/usr/local/sbin/haproxy -D -f "+configuration.HaProxyCfgPath()+" -p /tmp/haproxy.pid -sf "+pid, "' :", err)
+		log.Println(stdOut)
 		log.Println(stdErr)
 	}
 }
@@ -89,11 +94,6 @@ func (h *haProxyConfigurator) generateCertFilePath(projectName string, entityTyp
 	return sslPath + projectName + "-" + entityType + "-server.pem"
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 const defaultHaProxyTemplate string = `global
 	maxconn 4096

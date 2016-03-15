@@ -8,11 +8,10 @@ import (
 const projectNameRegexp string = "/(?P<projectName>.*)/(?P<entityType>.*)"
 
 type ServiceLocator interface {
-	LocateServiceByType(projectName string, entityType string) ([]commons.Service, bool)
 
-	LocateAllService() ([]commons.Service, bool)
+	LocateAllService() (res []commons.Service)
 
-	LocateServiceByProject(projectName string) ([]commons.Service, bool)
+	LocateServiceByProject(projectName string) (res []commons.Service)
 }
 
 func GetAppIdMatchKodokojoProjectName(appId string) (projectName, entityName string) {

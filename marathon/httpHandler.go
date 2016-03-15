@@ -58,7 +58,7 @@ func (h *Httphandler) Handler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		log.Println("Unhandled event", event, "dur to unknwo projet name from AppId")
+		log.Println("Unhandled event", event, ", unable to extract projet name from AppId", event.AppId)
 	}
 
 }

@@ -13,13 +13,10 @@ type MarathonServiceLocator struct {
 	marathonUrl string
 }
 
-func (m MarathonServiceLocator) LocateServiceByType(projectName string, entityType string) ([]commons.Service, bool) {
+func (m MarathonServiceLocator) LocateServiceByProject(projectName string) (res []commons.Service) {
 	url := m.marathonUrl + "/v2/apps?embed=apps.tasks&label=project,componentType"
 	if len(projectName) > 0 {
 		url = url + ",project==" + projectName
-	}
-	if len(entityType) > 0 {
-		url = url + ",componentType==" + entityType
 	}
 	resp, err := http.Get(url)
 	if err != nil {
@@ -28,21 +25,16 @@ func (m MarathonServiceLocator) LocateServiceByType(projectName string, entityTy
 	if resp.StatusCode == 200 {
 		defer resp.Body.Close()
 		dataJson, _ := ioutil.ReadAll(resp.Body)
-
-		return m.ExtractServiceFromJson(dataJson)
+		res = m.ExtractServiceFromJson(dataJson)
 	}
-	return make([]commons.Service, 0), false
+	return
 }
 
-func (m MarathonServiceLocator) LocateAllService() ([]commons.Service, bool) {
-	return m.LocateServiceByType("", "")
+func (m MarathonServiceLocator) LocateAllService() (res []commons.Service) {
+	return m.LocateServiceByProject("")
 }
 
-func (m MarathonServiceLocator) LocateServiceByProject(projectName string) ([]commons.Service, bool) {
-	return m.LocateServiceByType(projectName, "")
-}
-
-func (m MarathonServiceLocator) ExtractServiceFromJson(dataJson []byte) (res []commons.Service, succes bool) {
+func (m MarathonServiceLocator) ExtractServiceFromJson(dataJson []byte) (res []commons.Service) {
 
 	apps := Apps{}
 	json.Unmarshal(dataJson, &apps)
@@ -78,20 +70,21 @@ func (m MarathonServiceLocator) ExtractServiceFromJson(dataJson []byte) (res []c
 		}
 		res = append(res, commons.Service{ProjectName: projectName, Version: app.Version, LastConfigChangeAt: app.VersionInfo.LastConfigChangeAt, LastScalingAt: app.VersionInfo.LastConfigChangeAt, HaProxySSHEntries: haProxySSHEntries, HaProxyHTTPEntries: haProxyHTTPEntries})
 	}
-	succes = len(res) > 0
 	return
 }
 
-func (m *MarathonServiceLocator) isAlive(healthChecks []HealthCheck) bool {
-	var res bool = true
+func (m *MarathonServiceLocator) isAlive(healthChecks []HealthCheck) (alive bool) {
+	alive = true
 	for _, health := range healthChecks {
-		if res {
-			res = health.Alive
+		if alive {
+			alive = health.Alive
 		}
 	}
-	return res
+	return
 }
 
-func NewMarathonServiceLocator(marathonUrl string) MarathonServiceLocator {
-	return MarathonServiceLocator{marathonUrl}
+func NewMarathonServiceLocator(marathonUrl string) (res *MarathonServiceLocator) {
+	res = new(MarathonServiceLocator)
+	res.marathonUrl = marathonUrl
+	return
 }
