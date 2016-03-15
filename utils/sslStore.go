@@ -28,8 +28,10 @@ func (s *SslStore) GetPemFileFromSslStore(project string, entityType string) (re
 		if err != nil {
 			log.Println(err)
 		}
-		log.Println("SSL key", string(res))
+		log.Println("SSL key")
+		return res
+	} else {
+		log.Println("SSL file note found on url", url)
 	}
-	log.Println("SSL file note found on url", url)
 	return
 }

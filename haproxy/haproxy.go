@@ -55,12 +55,12 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 			key := h.generateKey(project.ProjectName, entry.EntryName)
 			if _, exist := h.cache[key]; !exist {
 				sskKeyPath := h.generateCertFilePath(project.ProjectName, entry.EntryName)
-				if _, err := os.Stat(sskKeyPath); os.IsNotExist(err) {
+				if stat, err := os.Stat(sskKeyPath); os.IsNotExist(err) || stat.Size() <= 0 {
 					sslKeyContent := h.sslStore.GetPemFileFromSslStore(project.ProjectName, entry.EntryName)
-					os.Create(sskKeyPath)
-					err := ioutil.WriteFile(sskKeyPath, sslKeyContent, 0600)
+					err := ioutil.WriteFile(sskKeyPath, sslKeyContent, 0644)
 					h.cache[key] = sslKeyContent
-					log.Println("Retrive a SSL certificate for key", key)
+					log.Println("Retrive a SSL certificate for key", key, "write in file", sskKeyPath)
+					log.Println(sskKeyPath,"content", string(sslKeyContent))
 					if err != nil {
 						log.Println("Unable to write SSL file", sskKeyPath, err)
 					}
@@ -75,14 +75,12 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 
 	reload := exec.Command("/usr/local/sbin/haproxy", "-D", "-f", configuration.HaProxyCfgPath(), "-p", "/tmp/haproxy.pid", "-sf", pid)
 
-	stdOut, _ := reload.StdoutPipe()
-	stdErr, _ := reload.StderrPipe()
-
 	err := reload.Run()
 	if err != nil {
-		log.Println("Error while trying to reload HA proxy wiht command'", "/usr/local/sbin/haproxy -D -f "+configuration.HaProxyCfgPath()+" -p /tmp/haproxy.pid -sf "+pid, "' :", err)
-		log.Println(stdOut)
-		log.Println(stdErr)
+		output, _ := reload.CombinedOutput()
+		log.Println("Error while trying to reload HA proxy wiht command'", "/usr/local/sbin/haproxy -D -f " + configuration.HaProxyCfgPath() + " -p /tmp/haproxy.pid -sf " + pid, "' :", err)
+		log.Println(string(output))
+//		log.Println(errOutput.Error())
 	}
 }
 
@@ -93,7 +91,6 @@ func (h *haProxyConfigurator) generateKey(projectName string, entityType string)
 func (h *haProxyConfigurator) generateCertFilePath(projectName string, entityType string) string {
 	return sslPath + projectName + "-" + entityType + "-server.pem"
 }
-
 
 const defaultHaProxyTemplate string = `global
 	maxconn 4096

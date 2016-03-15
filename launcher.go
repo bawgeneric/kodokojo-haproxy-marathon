@@ -55,7 +55,6 @@ func main() {
 	sslStore := utils.NewSslStore(*marathonUrl)
 	generator := haproxy.NewHaProxyConfigurator(*templatePath, sslStore)
 	applicationState := haproxy.NewApplicationsState(config, locator, generator, commons.HaProxyContext{})
-	applicationState.Start(marathonEventChannel)
 	handler := marathon.NewHttphandler(config, marathonEventChannel)
 
 	log.Println("Marathon url		:", config.MarathonUrl())
@@ -65,6 +64,7 @@ func main() {
 	applicationState.UpdateServicesIfConfigurationChanged(services)
 
 	marathon.RegisterMarathon(config)
+	applicationState.Start(marathonEventChannel)
 	handler.Start()
 
 }
