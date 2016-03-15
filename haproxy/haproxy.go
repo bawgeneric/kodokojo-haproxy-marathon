@@ -42,6 +42,7 @@ func (g *haProxyConfigurator) GenerateConfiguration(context commons.HaProxyConte
 
 func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration string, configuration commons.Configuration, haProxyContext commons.HaProxyContext) {
 	log.Println("Reloading configuration")
+	log.Println(&haProxyContext)
 	if len(haConfiguration) > 0 {
 		err := ioutil.WriteFile(configuration.HaProxyCfgPath(), []byte(haConfiguration), 0644)
 		if err != nil {
@@ -68,14 +69,14 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 			}
 		}
 	}
-	pidData,_:=ioutil.ReadFile("/tmp/haproxy.pid")
+	pidData, _ := ioutil.ReadFile("/tmp/haproxy.pid")
 	pid := string(pidData)
-	reload := exec.Command("/usr/local/sbin/haproxy", "-D", "-f", configuration.HaProxyCfgPath(), "-p" ,"/tmp/haproxy.pid","-sf", pid)
+	reload := exec.Command("/usr/local/sbin/haproxy", "-D", "-f", configuration.HaProxyCfgPath(), "-p", "/tmp/haproxy.pid", "-sf", pid)
 	stdErr, _ := reload.StderrPipe()
 
 	err := reload.Run()
 	if err != nil {
-		log.Println("Error while trying to reload HA proxy wiht command'", "/usr/local/sbin/haproxy -D -f "+configuration.HaProxyCfgPath()+" -p /tmp/haproxy.pid -sf " +pid,"' :", err)
+		log.Println("Error while trying to reload HA proxy wiht command'", "/usr/local/sbin/haproxy -D -f "+configuration.HaProxyCfgPath()+" -p /tmp/haproxy.pid -sf "+pid, "' :", err)
 		log.Println(stdErr)
 	}
 }

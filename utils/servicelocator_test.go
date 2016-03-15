@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func Test_extract_valide_project_name_and_component_type(t *testing.T) {

@@ -53,11 +53,12 @@ func (a *ApplicationsState) handleMarathonEventInHaProxyConfiguration(marathonEv
 					}
 				} else {
 					log.Println("Not able to found project for", projectName, "in current HaProcy Context")
-					a.UpdateIfConfigurationChanged(commons.Service{ProjectName: projectName})
+					a.UpdateServicesIfConfigurationChanged(services)
 				}
 			} else {
 				log.Println("Not able to found service for", projectName, "and entity type", entityType)
-				a.UpdateIfConfigurationChanged(commons.Service{ProjectName: projectName})
+				service := commons.Service{ProjectName: projectName}
+				a.UpdateIfConfigurationChanged(service)
 			}
 		} else {
 			log.Println("AppId", appId, "isn't managed by Kodo Kojo")
@@ -83,13 +84,12 @@ func (a *ApplicationsState) UpdateServicesIfConfigurationChanged(services []comm
 			if found {
 				previousProject := &previousProjectPtr
 
-				newProject := *previousProject
-				newProject.ProjectName = previousProject.ProjectName
-				newProject.Version = service.Version
-				newProject.LastConfigChangeAt = service.LastConfigChangeAt
-				newProject.LastScalingAt = service.LastScalingAt
-				newProject.HaProxyHTTPEntries = service.HaProxyHTTPEntries
-				newProject.HaProxySSHEntries = service.HaProxySSHEntries
+				projectUpdated := *previousProject
+				projectUpdated.Version = service.Version
+				projectUpdated.LastConfigChangeAt = service.LastConfigChangeAt
+				projectUpdated.LastScalingAt = service.LastScalingAt
+				projectUpdated.HaProxyHTTPEntries = service.HaProxyHTTPEntries
+				projectUpdated.HaProxySSHEntries = service.HaProxySSHEntries
 
 				projects := make([]commons.Project, 0)
 				//Adding all other projects
@@ -98,7 +98,7 @@ func (a *ApplicationsState) UpdateServicesIfConfigurationChanged(services []comm
 						projects = append(projects, project)
 					}
 				}
-				projects = append(projects, newProject)
+				projects = append(projects, projectUpdated)
 				newState.Projects = projects
 
 				previousConfig := a.haProxyConfigurationGenerator.GenerateConfiguration(*previous)

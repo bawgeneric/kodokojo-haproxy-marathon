@@ -38,5 +38,6 @@ haproxy:
     - 443:443
     - 4444:4444
   environment:
+    - PORT=4444
     - MARATHON_URL=http://192.168.99.100:8080
     - MARATHON_URL_CALLBACK=http://192.168.99.100:4444/callback

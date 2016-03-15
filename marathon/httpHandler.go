@@ -28,10 +28,12 @@ func NewHttphandler(configuration commons.Configuration, marathonEventChannel ch
 }
 
 func (h *Httphandler) Start() {
+
 	http.HandleFunc("/callback", h.Handler)
 	portStr := fmt.Sprintf(":%d", h.configuration.Port())
+	log.Println("Starting to Listen on port", portStr)
 	http.ListenAndServe(portStr, nil)
-	log.Println("Listening on port", portStr)
+
 }
 
 func (h *Httphandler) Handler(w http.ResponseWriter, r *http.Request) {
