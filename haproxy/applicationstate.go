@@ -12,7 +12,6 @@ import (
 
 type ProjectConfiguration struct {
 	ProjectName string `json:"projectName"`
-	SshIp       string `json:"sshIp"`
 	SshPort     int    `json:"sshPort"`
 }
 
@@ -106,7 +105,6 @@ func (a *ApplicationsState) UpdateServicesIfConfigurationChanged(services []comm
 				log.Println(service.ProjectName, "is a new project.")
 				projectConfig := a.getSshConfiguration(service.ProjectName)
 				project := commons.Project{ProjectName: service.ProjectName,
-					SSHIp:              projectConfig.SshIp,
 					SSHPort:            projectConfig.SshPort,
 					LastScalingAt:      service.LastScalingAt,
 					LastConfigChangeAt: service.LastConfigChangeAt,

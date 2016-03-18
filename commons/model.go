@@ -17,7 +17,6 @@ type Project struct {
 	Version            time.Time
 	LastConfigChangeAt time.Time
 	LastScalingAt      time.Time
-	SSHIp              string
 	SSHPort            int
 	HaProxyHTTPEntries []HaProxyEntry
 	HaProxySSHEntries  []HaProxyEntry
