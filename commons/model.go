@@ -22,7 +22,6 @@ type Project struct {
 	HaProxySSHEntries  []HaProxyEntry
 }
 
-
 func (p *Project) IsReady() bool {
 	return len(p.HaProxyHTTPEntries) > 0 || len(p.HaProxySSHEntries) > 0
 }
@@ -35,18 +34,14 @@ func (p *Project) IsSSHReady() bool {
 	return p.haveBackend(p.HaProxySSHEntries)
 }
 
-func (p *Project) haveBackend(entries []HaProxyEntry) bool {
-	if len(entries) <= 0 {
-		return false
-	}
-	res := true
-
-	for i := 0; i < len(entries) && res; i++ {
-		entry := entries[i]
+func (p *Project) haveBackend(entries []HaProxyEntry) (res bool) {
+	for _, entry := range entries {
 		res = len(entry.Backends) > 0
+		if !res {
+			break
+		}
 	}
-
-	return res
+	return
 }
 
 type HaProxyEntry struct {
