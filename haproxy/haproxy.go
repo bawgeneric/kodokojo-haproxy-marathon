@@ -60,7 +60,7 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 					err := ioutil.WriteFile(sskKeyPath, sslKeyContent, 0644)
 					h.cache[key] = sslKeyContent
 					log.Println("Retrive a SSL certificate for key", key, "write in file", sskKeyPath)
-					log.Println(sskKeyPath,"content", string(sslKeyContent))
+					log.Println(sskKeyPath, "content", string(sslKeyContent))
 					if err != nil {
 						log.Println("Unable to write SSL file", sskKeyPath, err)
 					}
@@ -78,9 +78,9 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 	err := reload.Run()
 	if err != nil {
 		output, _ := reload.CombinedOutput()
-		log.Println("Error while trying to reload HA proxy wiht command'", "/usr/local/sbin/haproxy -D -f " + configuration.HaProxyCfgPath() + " -p /tmp/haproxy.pid -sf " + pid, "' :", err)
+		log.Println("Error while trying to reload HA proxy wiht command'", "/usr/local/sbin/haproxy -D -f "+configuration.HaProxyCfgPath()+" -p /tmp/haproxy.pid -sf "+pid, "' :", err)
 		log.Println(string(output))
-//		log.Println(errOutput.Error())
+		//		log.Println(errOutput.Error())
 	}
 }
 

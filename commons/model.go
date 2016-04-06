@@ -22,7 +22,6 @@ type Project struct {
 	HaProxySSHEntries  []HaProxyEntry
 }
 
-
 func (p *Project) IsReady() bool {
 	return len(p.HaProxyHTTPEntries) > 0 || len(p.HaProxySSHEntries) > 0
 }
