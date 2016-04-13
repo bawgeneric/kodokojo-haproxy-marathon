@@ -22,10 +22,6 @@ type ApplicationsState struct {
 	haProxyCurrentContext         commons.HaProxyContext
 }
 
-func NewApplicationsState(configuration commons.Configuration, serviceLocator utils.ServiceLocator, haProxyConfigurationGenerator haProxyConfigurator, haProxyCurrentContext commons.HaProxyContext) ApplicationsState {
-	return ApplicationsState{configuration: configuration, serviceLocator: serviceLocator, haProxyCurrentContext: haProxyCurrentContext, haProxyConfigurationGenerator: haProxyConfigurationGenerator}
-}
-
 func (a *ApplicationsState) Start(marathonEventChannel chan commons.MarathonEvent) {
 	log.Println("Starting polling of channel")
 	go func() {
