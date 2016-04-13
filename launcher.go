@@ -11,20 +11,29 @@ import (
 	"net"
 )
 
+var (
+	port int
+	marathonUrl string
+	haProxyCfgPath string
+	marathonCallbackUrl string
+	templatePath string
+	projectName string
+)
+
 func main() {
 
-	port := flag.Int("httpPort", 8080, "port number to listen")
-	marathonUrl := flag.String("marathonUrl", "http://localhost:8080", "Url to connect to Marathon API")
-	haProxyCfgPath := flag.String("haProxyCfgPath", "/usr/local/etc/haproxy/haproxy.cfg", "haproxy.cfg configuration Path")
-	marathonCallbackUrl := flag.String("marathonCallbackUrl", "", "Marathon callback Url which will be registered on marathon")
-	templatePath := flag.String("templatePath", "", "Path to the template file use to generate HA proxy configuration")
-	projectName := flag.String("projectName", "", "Project name to listen - Not used in this version.")
+	flag.IntVar(&port, "httpPort", 8080, "port number to listen")
+	flag.StringVar(&marathonUrl, "marathonUrl", "http://localhost:8080", "Url to connect to Marathon API")
+	flag.StringVar(&haProxyCfgPath, "haProxyCfgPath", "/usr/local/etc/haproxy/haproxy.cfg", "haproxy.cfg configuration Path")
+	flag.StringVar(&marathonCallbackUrl,"marathonCallbackUrl", "", "Marathon callback Url which will be registered on marathon")
+	flag.StringVar(&templatePath, "templatePath", "", "Path to the template file use to generate HA proxy configuration")
+	flag.StringVar(&projectName, "projectName", "", "Project name to listen - Not used in this version.")
 
 	flag.Parse()
 
-	portStr := fmt.Sprintf(":%d", *port)
+	portStr := fmt.Sprintf(":%d", port)
 
-	if *marathonCallbackUrl == "" {
+	if marathonCallbackUrl == "" {
 
 		ifaces, _ := net.Interfaces()
 
@@ -45,15 +54,15 @@ func main() {
 				}
 			}
 		}
-		*marathonCallbackUrl = "http://" + ip.String() + portStr + "/callback"
+		marathonCallbackUrl = "http://" + ip.String() + portStr + "/callback"
 	}
 
 	marathonEventChannel := make(chan commons.MarathonEvent, 5)
 
-	config := commons.NewConfiguration(*projectName, *haProxyCfgPath, *marathonUrl, *marathonCallbackUrl, *port, *templatePath)
+	config := commons.NewConfiguration(projectName, haProxyCfgPath, marathonUrl, marathonCallbackUrl, port, templatePath)
 	locator := marathon.NewMarathonServiceLocator(config.MarathonUrl())
-	sslStore := utils.NewSslStore(*marathonUrl)
-	generator := haproxy.NewHaProxyConfigurator(*templatePath, sslStore)
+	sslStore := utils.NewSslStore(marathonUrl)
+	generator := haproxy.NewHaProxyConfigurator(templatePath, sslStore)
 	applicationState := haproxy.NewApplicationsState(config, locator, generator, commons.HaProxyContext{})
 	handler := marathon.NewHttphandler(config, marathonEventChannel)
 
@@ -66,5 +75,4 @@ func main() {
 	marathon.RegisterMarathon(config)
 	applicationState.Start(marathonEventChannel)
 	handler.Start()
-
 }

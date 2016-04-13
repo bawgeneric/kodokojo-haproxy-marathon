@@ -19,10 +19,6 @@ type haProxyConfigurator struct {
 	cache        map[string][]byte
 }
 
-func NewHaProxyConfigurator(templatePath string, sslStore utils.SslStore) haProxyConfigurator {
-	return haProxyConfigurator{templatePath, sslStore, make(map[string][]byte)}
-}
-
 func (g *haProxyConfigurator) GenerateConfiguration(context commons.HaProxyContext) string {
 	var tpl template.Template
 	if len(g.templatePath) > 0 {
