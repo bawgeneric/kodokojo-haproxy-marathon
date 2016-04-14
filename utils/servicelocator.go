@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
+	"kodokojo-haproxy-marathon/commons"
 	"regexp"
 )
 
@@ -13,7 +13,16 @@ type ServiceLocator interface {
 	LocateServiceByProject(projectName string) (res []commons.Service)
 }
 
-func GetAppIdMatchKodokojoProjectName(appId string) (projectName, entityName string) {
+type KodoKojoProject struct {
+	ProjectName string
+	EntityName  string
+}
+
+func (k KodoKojoProject) HasEntity() bool {
+	return k.EntityName != ""
+}
+
+func GetAppIdMatchKodokojoProjectName(appId string) (project KodoKojoProject, founded bool) {
 
 	r := regexp.MustCompile(projectNameRegexp)
 	namesRegexp := r.SubexpNames()
@@ -26,8 +35,8 @@ func GetAppIdMatchKodokojoProjectName(appId string) (projectName, entityName str
 			group[namesRegexp[i]] = value
 		}
 		if len(group) >= 2 {
-			projectName = group["projectName"]
-			entityName = group["entityType"]
+			project = KodoKojoProject{group["projectName"], group["entityType"]}
+			founded = true
 		}
 	}
 	return

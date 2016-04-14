@@ -3,21 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/haproxy"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/marathon"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
+	"kodokojo-haproxy-marathon/commons"
+	"kodokojo-haproxy-marathon/haproxy"
+	"kodokojo-haproxy-marathon/marathon"
+	"kodokojo-haproxy-marathon/utils"
 	"log"
 	"net"
 )
 
 var (
-	port int
-	marathonUrl string
-	haProxyCfgPath string
+	port                int
+	marathonUrl         string
+	haProxyCfgPath      string
 	marathonCallbackUrl string
-	templatePath string
-	projectName string
+	templatePath        string
+	projectName         string
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 	flag.IntVar(&port, "httpPort", 8080, "port number to listen")
 	flag.StringVar(&marathonUrl, "marathonUrl", "http://localhost:8080", "Url to connect to Marathon API")
 	flag.StringVar(&haProxyCfgPath, "haProxyCfgPath", "/usr/local/etc/haproxy/haproxy.cfg", "haproxy.cfg configuration Path")
-	flag.StringVar(&marathonCallbackUrl,"marathonCallbackUrl", "", "Marathon callback Url which will be registered on marathon")
+	flag.StringVar(&marathonCallbackUrl, "marathonCallbackUrl", "", "Marathon callback Url which will be registered on marathon")
 	flag.StringVar(&templatePath, "templatePath", "", "Path to the template file use to generate HA proxy configuration")
 	flag.StringVar(&projectName, "projectName", "", "Project name to listen - Not used in this version.")
 

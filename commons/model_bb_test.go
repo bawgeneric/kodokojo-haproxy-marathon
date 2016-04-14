@@ -1,8 +1,8 @@
 package commons_test
 
 import (
-	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
 	"github.com/stretchr/testify/assert"
+	"kodokojo-haproxy-marathon/commons"
 	"testing"
 )
 

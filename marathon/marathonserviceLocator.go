@@ -2,9 +2,9 @@ package marathon
 
 import (
 	"encoding/json"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"io/ioutil"
+	"kodokojo-haproxy-marathon/commons"
+	"kodokojo-haproxy-marathon/utils"
 	"log"
 	"net/http"
 )
@@ -40,35 +40,34 @@ func (m MarathonServiceLocator) ExtractServiceFromJson(dataJson []byte) (res []c
 	json.Unmarshal(dataJson, &apps)
 	res = make([]commons.Service, 0)
 	for _, app := range apps.Apps {
-		projectName, _ := utils.GetAppIdMatchKodokojoProjectName(app.Id)
-		if len(projectName) <= 0 {
-			return
-		}
-		haProxySSHEntries := make([]commons.HaProxyEntry, 0)
-		haProxyHTTPEntries := make([]commons.HaProxyEntry, 0)
-		httpBackends := make([]commons.HaProxyBackEnd, 0)
-		sshBackends := make([]commons.HaProxyBackEnd, 0)
-		for _, task := range app.Tasks {
-			if m.isAlive(task.HealthChecks) {
-				for i, port := range task.Ports {
-					var isHttpPort bool = app.Container.Docker.PortMappings[i].ContainerPort != 22
-					backend := commons.HaProxyBackEnd{BackEndHost: task.Host, BackEndPort: port}
+		project, found := utils.GetAppIdMatchKodokojoProjectName(app.Id)
+		if found {
+			haProxySSHEntries := make([]commons.HaProxyEntry, 0)
+			haProxyHTTPEntries := make([]commons.HaProxyEntry, 0)
+			httpBackends := make([]commons.HaProxyBackEnd, 0)
+			sshBackends := make([]commons.HaProxyBackEnd, 0)
+			for _, task := range app.Tasks {
+				if m.isAlive(task.HealthChecks) {
+					for i, port := range task.Ports {
+						var isHttpPort bool = app.Container.Docker.PortMappings[i].ContainerPort != 22
+						backend := commons.HaProxyBackEnd{BackEndHost: task.Host, BackEndPort: port}
 
-					if isHttpPort {
-						httpBackends = append(httpBackends, backend)
-					} else {
-						sshBackends = append(sshBackends, backend)
+						if isHttpPort {
+							httpBackends = append(httpBackends, backend)
+						} else {
+							sshBackends = append(sshBackends, backend)
+						}
 					}
 				}
 			}
+			if len(httpBackends) > 0 {
+				haProxyHTTPEntries = append(haProxyHTTPEntries, commons.HaProxyEntry{EntryName: app.Labels.ComponentType, Backends: httpBackends})
+			}
+			if len(sshBackends) > 0 {
+				haProxySSHEntries = append(haProxySSHEntries, commons.HaProxyEntry{EntryName: app.Labels.ComponentType, Backends: sshBackends})
+			}
+			res = append(res, commons.Service{ProjectName: project.ProjectName, Version: app.Version, LastConfigChangeAt: app.VersionInfo.LastConfigChangeAt, LastScalingAt: app.VersionInfo.LastConfigChangeAt, HaProxySSHEntries: haProxySSHEntries, HaProxyHTTPEntries: haProxyHTTPEntries})
 		}
-		if len(httpBackends) > 0 {
-			haProxyHTTPEntries = append(haProxyHTTPEntries, commons.HaProxyEntry{EntryName: app.Labels.ComponentType, Backends: httpBackends})
-		}
-		if len(sshBackends) > 0 {
-			haProxySSHEntries = append(haProxySSHEntries, commons.HaProxyEntry{EntryName: app.Labels.ComponentType, Backends: sshBackends})
-		}
-		res = append(res, commons.Service{ProjectName: projectName, Version: app.Version, LastConfigChangeAt: app.VersionInfo.LastConfigChangeAt, LastScalingAt: app.VersionInfo.LastConfigChangeAt, HaProxySSHEntries: haProxySSHEntries, HaProxyHTTPEntries: haProxyHTTPEntries})
 	}
 	return
 }

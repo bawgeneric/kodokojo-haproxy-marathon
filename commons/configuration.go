@@ -9,6 +9,10 @@ type Configuration struct {
 	templatePath        string
 }
 
+func NewConfiguration(projectNameMatch string, haProxyCfgPath string, marathonUrl string, marathonCallbackUrl string, port int, templatePath string) Configuration {
+	return Configuration{projectNameMatch, haProxyCfgPath, marathonUrl, marathonCallbackUrl, port, templatePath}
+}
+
 func (c *Configuration) Port() int {
 	return c.port
 }

@@ -2,10 +2,10 @@ package haproxy
 
 import (
 	"encoding/json"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"hash/fnv"
 	"io/ioutil"
+	"kodokojo-haproxy-marathon/commons"
+	"kodokojo-haproxy-marathon/utils"
 	"log"
 	"net/http"
 )
@@ -22,6 +22,10 @@ type ApplicationsState struct {
 	haProxyCurrentContext         commons.HaProxyContext
 }
 
+func NewApplicationsState(configuration commons.Configuration, serviceLocator utils.ServiceLocator, haProxyConfigurationGenerator haProxyConfigurator, haProxyCurrentContext commons.HaProxyContext) ApplicationsState {
+	return ApplicationsState{configuration: configuration, serviceLocator: serviceLocator, haProxyCurrentContext: haProxyCurrentContext, haProxyConfigurationGenerator: haProxyConfigurationGenerator}
+}
+
 func (a *ApplicationsState) Start(marathonEventChannel chan commons.MarathonEvent) {
 	log.Println("Starting polling of channel")
 	go func() {
@@ -35,24 +39,23 @@ func (a *ApplicationsState) Start(marathonEventChannel chan commons.MarathonEven
 func (a *ApplicationsState) handleMarathonEventInHaProxyConfiguration(marathonEvent commons.MarathonEvent) {
 	log.Println("Processing event ", &marathonEvent, "to apply the a new state ?")
 	appId := marathonEvent.AppId
-	projectName, entityType := utils.GetAppIdMatchKodokojoProjectName(appId)
-
-	if projectName != "" {
-		if entityType != "" {
-			services := a.serviceLocator.LocateServiceByProject(projectName)
+	project, found := utils.GetAppIdMatchKodokojoProjectName(appId)
+	if found {
+		if project.HasEntity() {
+			services := a.serviceLocator.LocateServiceByProject(project.ProjectName)
 			if len(services) > 0 {
-				previous, found := a.findProjectInHaProxyContext(a.haProxyCurrentContext, projectName)
+				previous, found := a.findProjectInHaProxyContext(a.haProxyCurrentContext, project.ProjectName)
 				if found {
 					if previous.LastChangedAd.Before(marathonEvent.Timestamp) {
 						a.UpdateServicesIfConfigurationChanged(services)
 					}
 				} else {
-					log.Println("Not able to found project for", projectName, "in current HaProcy Context")
+					log.Println("Not able to found project for", project.ProjectName, "in current HaProcy Context")
 					a.UpdateServicesIfConfigurationChanged(services)
 				}
 			} else {
-				log.Println("Not able to found service for", projectName, "Updating configuration for this project.")
-				service := commons.Service{ProjectName: projectName}
+				log.Println("Not able to found service for", project.ProjectName, "Updating configuration for this project.")
+				service := commons.Service{ProjectName: project.ProjectName}
 				a.UpdateIfConfigurationChanged(service)
 			}
 		} else {
