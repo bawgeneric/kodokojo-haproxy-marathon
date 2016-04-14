@@ -40,8 +40,8 @@ func (a *ApplicationsState) handleMarathonEventInHaProxyConfiguration(marathonEv
 	log.Println("Processing event ", &marathonEvent, "to apply the a new state ?")
 	appId := marathonEvent.AppId
 	project, found := utils.GetAppIdMatchKodokojoProjectName(appId)
-	if !found {
-		if !project.HasEntity() {
+	if found {
+		if project.HasEntity() {
 			services := a.serviceLocator.LocateServiceByProject(project.ProjectName)
 			if len(services) > 0 {
 				previous, found := a.findProjectInHaProxyContext(a.haProxyCurrentContext, project.ProjectName)
