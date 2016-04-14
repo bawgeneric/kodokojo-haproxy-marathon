@@ -2,9 +2,9 @@ package haproxy
 
 import (
 	"bytes"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"io/ioutil"
+	"kodokojo-haproxy-marathon/commons"
+	"kodokojo-haproxy-marathon/utils"
 	"log"
 	"os"
 	"os/exec"
@@ -17,6 +17,10 @@ type haProxyConfigurator struct {
 	templatePath string
 	sslStore     utils.SslStore
 	cache        map[string][]byte
+}
+
+func NewHaProxyConfigurator(templatePath string, sslStore utils.SslStore) haProxyConfigurator {
+	return haProxyConfigurator{templatePath, sslStore, make(map[string][]byte)}
 }
 
 func (g *haProxyConfigurator) GenerateConfiguration(context commons.HaProxyContext) string {

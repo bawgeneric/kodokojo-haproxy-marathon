@@ -3,9 +3,9 @@ package marathon
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
-	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"io/ioutil"
+	"kodokojo-haproxy-marathon/commons"
+	"kodokojo-haproxy-marathon/utils"
 	"log"
 	"net/http"
 	"strings"
@@ -45,10 +45,9 @@ func (h *Httphandler) Handler(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(body, &event)
 	log.Println(event)
 
-	projectName, _ := utils.GetAppIdMatchKodokojoProjectName(event.AppId)
-
+	_, found := utils.GetAppIdMatchKodokojoProjectName(event.AppId)
 	var treated bool = false
-	if len(projectName) > 0 {
+	if found {
 		for i := 0; i < len(h.marathonEventHandlers) && !treated; i++ {
 			handler := h.marathonEventHandlers[i]
 			if handler.Accept(event) {
