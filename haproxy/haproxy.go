@@ -56,7 +56,7 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 			if _, exist := h.cache[key]; !exist {
 				sskKeyPath := h.generateCertFilePath(project.ProjectName, entry.EntryName)
 				if stat, err := os.Stat(sskKeyPath); os.IsNotExist(err) || stat.Size() <= 0 {
-					sslKeyContent := h.sslStore.GetPemFileFromSslStore(project.ProjectName, entry.EntryName)
+					sslKeyContent, _ := h.sslStore.GetPemFileFromSslStore(project.ProjectName, entry.EntryName)
 					err := ioutil.WriteFile(sskKeyPath, sslKeyContent, 0644)
 					h.cache[key] = sslKeyContent
 					log.Println("Retrive a SSL certificate for key", key, "write in file", sskKeyPath)

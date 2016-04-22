@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-const apiBaseUrl string = "/v2/artifacts/"
+const apiBaseUrl string = "/v2/artifacts"
 
 type SslStore struct {
 	marathonUrl string
@@ -16,22 +18,18 @@ func NewSslStore(marathonUrl string) SslStore {
 	return SslStore{marathonUrl: marathonUrl}
 }
 
-func (s *SslStore) GetPemFileFromSslStore(project string, entityType string) (res []byte) {
+func (s *SslStore) GetPemFileFromSslStore(project string, entityType string) (result []byte, err error) {
 	url := s.marathonUrl + apiBaseUrl + "/ssl/" + project + "/" + entityType + "/" + project + "-" + entityType + "-server.pem"
-	response, err := http.Get(url)
-	if err != nil {
-		log.Println(err)
-	}
-	if response.StatusCode == 200 {
+	response, e := http.Get(url)
+	if e != nil {
+		log.Println(e)
+		err = e
+	} else if response.StatusCode == http.StatusOK {
 		defer response.Body.Close()
-		res, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Println(err)
-		}
-		log.Println("SSL key")
-		return res
+		result, err = ioutil.ReadAll(response.Body)
+		return
 	} else {
-		log.Println("SSL file note found on url", url)
+		err = errors.New(fmt.Sprintf("SSL file note found on url : %s", url))
 	}
 	return
 }
