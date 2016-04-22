@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"hash/fnv"
 	"io/ioutil"
-	"kodokojo-haproxy-marathon/commons"
-	"kodokojo-haproxy-marathon/utils"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"log"
 	"net/http"
 )

@@ -3,8 +3,8 @@ package marathon
 import (
 	"encoding/json"
 	"io/ioutil"
-	"kodokojo-haproxy-marathon/commons"
-	"kodokojo-haproxy-marathon/utils"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"log"
 	"net/http"
 )

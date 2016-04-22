@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"kodokojo-haproxy-marathon/commons"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
 	"regexp"
 )
 

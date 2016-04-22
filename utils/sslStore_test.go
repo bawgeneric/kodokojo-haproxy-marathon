@@ -3,7 +3,7 @@ package utils_test
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"kodokojo-haproxy-marathon/utils"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"net/http"
 	"net/http/httptest"
 	"strconv"

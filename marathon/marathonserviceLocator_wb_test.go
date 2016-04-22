@@ -2,7 +2,7 @@ package marathon_test
 
 import (
 	"github.com/stretchr/testify/assert"
-	"kodokojo-haproxy-marathon/marathon"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/marathon"
 	"testing"
 )
 

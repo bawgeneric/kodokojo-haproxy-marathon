@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"kodokojo-haproxy-marathon/commons"
-	"kodokojo-haproxy-marathon/haproxy"
-	"kodokojo-haproxy-marathon/marathon"
-	"kodokojo-haproxy-marathon/utils"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/haproxy"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/marathon"
+	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"log"
 	"net"
 )
