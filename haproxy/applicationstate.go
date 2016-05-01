@@ -120,14 +120,21 @@ func (a *ApplicationsState) UpdateServicesIfConfigurationChanged(services []comm
 	log.Println("Map of SSHEntries content", &sshEntries)
 	log.Println("NewState =", &newState)
 	a.haProxyCurrentContext = newState
+	valueAdded := false;
 	for i := 0; i < len(a.haProxyCurrentContext.Projects); i++ {
 		log.Println("Initial HTTP value", &(a.haProxyCurrentContext.Projects[i]))
 		log.Println("Adding haEntry for project", a.haProxyCurrentContext.Projects[i].ProjectName, httpEntries[a.haProxyCurrentContext.Projects[i].ProjectName], sshEntries[a.haProxyCurrentContext.Projects[i].ProjectName])
+		if (!valueAdded) {
+			valueAdded = len(httpEntries[a.haProxyCurrentContext.Projects[i].ProjectName]) > 0 || len(sshEntries[a.haProxyCurrentContext.Projects[i].ProjectName]) > 0
+		}
 		a.haProxyCurrentContext.Projects[i].HaProxyHTTPEntries = httpEntries[a.haProxyCurrentContext.Projects[i].ProjectName]
 		a.haProxyCurrentContext.Projects[i].HaProxySSHEntries = sshEntries[a.haProxyCurrentContext.Projects[i].ProjectName]
 	}
-	newConfig = a.haProxyConfigurationGenerator.GenerateConfiguration(a.haProxyCurrentContext)
-	a.haProxyConfigurationGenerator.ReloadHaProxyWithConfiguration(newConfig, a.configuration, a.haProxyCurrentContext)
+
+	if (valueAdded) {
+		newConfig = a.haProxyConfigurationGenerator.GenerateConfiguration(a.haProxyCurrentContext)
+		a.haProxyConfigurationGenerator.ReloadHaProxyWithConfiguration(newConfig, a.configuration, a.haProxyCurrentContext)
+	}
 
 }
 
