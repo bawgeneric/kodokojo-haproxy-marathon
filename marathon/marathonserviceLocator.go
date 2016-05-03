@@ -2,9 +2,9 @@ package marathon
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
 	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
+	"io/ioutil"
 	"log"
 	"net/http"
 )

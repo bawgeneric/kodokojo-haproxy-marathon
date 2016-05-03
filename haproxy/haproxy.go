@@ -2,9 +2,9 @@ package haproxy
 
 import (
 	"bytes"
-	"io/ioutil"
 	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
 	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"

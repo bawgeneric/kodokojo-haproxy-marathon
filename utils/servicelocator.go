@@ -7,9 +7,10 @@ import (
 
 const projectNameRegexp string = "/(.*)/(.*)"
 
+var r *regexp.Regexp = regexp.MustCompile(projectNameRegexp)
+
 type ServiceLocator interface {
 	LocateAllService() (res []commons.Service)
-
 	LocateServiceByProject(projectName string) (res []commons.Service)
 }
 
@@ -26,7 +27,6 @@ func (k KodoKojoProject) HasEntity() bool {
 // extract a KodoKojoProject from the given appId
 // return one KodoKojoProject and true if at least the project name is found from the appId, else false
 func GetAppIdMatchKodokojoProjectName(appId string) (project KodoKojoProject, found bool) {
-	r := regexp.MustCompile(projectNameRegexp)
 	submatch := r.FindAllStringSubmatch(appId, -1)
 	if submatch != nil {
 		project, found = buildKodokojoProject(submatch[0])

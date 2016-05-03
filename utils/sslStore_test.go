@@ -2,8 +2,8 @@ package utils_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -47,4 +47,5 @@ func Test_GetPemFileFromSslStore_with_200_and_result(t *testing.T) {
 	// then
 	assert.Equal(t, data, body)
 	assert.Nil(t, err)
+
 }

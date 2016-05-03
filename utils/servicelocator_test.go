@@ -132,3 +132,10 @@ func Test_buildKodokojoProject_on_slice_with_three_element(t *testing.T) {
 	assert.Equal(t, "ci", project.EntityName)
 	assert.Equal(t, "acme", project.ProjectName)
 }
+
+func Benchmark_getAppIdMatchKodokojoProjectName(b *testing.B) {
+	// given
+	for i := 0; i < b.N; i++ {
+		GetAppIdMatchKodokojoProjectName("/acme/ci")
+	}
+}

@@ -2,8 +2,8 @@ package marathon
 
 import (
 	"bytes"
-	"io/ioutil"
 	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
+	"io/ioutil"
 	"log"
 	"net/http"
 )

@@ -3,40 +3,64 @@ package marathon
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"github.com/kodokojo/kodokojo-haproxy-marathon/commons"
 	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 )
 
-type Httphandler struct {
+type marathonEventHandler struct {
+	projectName          string
+	marathonEventChannel chan commons.MarathonEvent
+	// is it usefull ? this data seems not to be used
+	EventType string
+}
+
+// is it really usefull ? always true, because project name always empty
+func (h *marathonEventHandler) Accept(marathonEvent commons.MarathonEvent) bool {
+	return strings.HasPrefix(marathonEvent.AppId, h.projectName)
+}
+
+func (h *marathonEventHandler) Handle(marathonEvent commons.MarathonEvent) {
+	log.Println("Push Marathon event", marathonEvent, "to channel")
+	h.marathonEventChannel <- marathonEvent
+}
+
+func newMarathonEventHandler(eventType string, marathonEventChannel chan commons.MarathonEvent) *marathonEventHandler {
+	res := new(marathonEventHandler)
+	res.EventType = eventType
+	res.marathonEventChannel = marathonEventChannel
+	return res
+}
+
+type Server struct {
 	configuration         commons.Configuration
-	marathonEventHandlers []MarathonEventHandler
+	marathonEventHandlers []*marathonEventHandler
 }
 
-func NewHttphandler(configuration commons.Configuration, marathonEventChannel chan commons.MarathonEvent) Httphandler {
+func NewServer(configuration commons.Configuration, marathonEventChannel chan commons.MarathonEvent) Server {
 
-	marathonEventHandlers := make([]MarathonEventHandler, 4)
-	marathonEventHandlers[0] = newEventTypeEventHandler("status_update_event", marathonEventChannel)
-	marathonEventHandlers[1] = newEventTypeEventHandler("health_status_changed_event", marathonEventChannel)
-	marathonEventHandlers[2] = newEventTypeEventHandler("remove_health_check_event", marathonEventChannel)
-	marathonEventHandlers[3] = newEventTypeEventHandler("failed_health_check_event", marathonEventChannel)
+	marathonEventHandlers := make([]*marathonEventHandler, 4)
+	marathonEventHandlers[0] = newMarathonEventHandler("status_update_event", marathonEventChannel)
+	marathonEventHandlers[1] = newMarathonEventHandler("health_status_changed_event", marathonEventChannel)
+	marathonEventHandlers[2] = newMarathonEventHandler("remove_health_check_event", marathonEventChannel)
+	marathonEventHandlers[3] = newMarathonEventHandler("failed_health_check_event", marathonEventChannel)
 
-	return Httphandler{configuration, marathonEventHandlers}
+	return Server{configuration, marathonEventHandlers}
 }
 
-func (h *Httphandler) Start() {
+func (s *Server) Start() {
 
-	http.HandleFunc("/callback", h.Handler)
-	portStr := fmt.Sprintf(":%d", h.configuration.Port())
+	// check concurrency
+	http.HandleFunc("/callback", s.Handler)
+	portStr := fmt.Sprintf(":%d", s.configuration.Port())
 	log.Println("Starting to Listen on port", portStr)
 	http.ListenAndServe(portStr, nil)
-
 }
 
-func (h *Httphandler) Handler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) Handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "\"OK\"")
 	defer r.Body.Close()
 	body, _ := ioutil.ReadAll(r.Body)
@@ -48,8 +72,8 @@ func (h *Httphandler) Handler(w http.ResponseWriter, r *http.Request) {
 	_, found := utils.GetAppIdMatchKodokojoProjectName(event.AppId)
 	var treated bool = false
 	if found {
-		for i := 0; i < len(h.marathonEventHandlers) && !treated; i++ {
-			handler := h.marathonEventHandlers[i]
+		for i := 0; i < len(s.marathonEventHandlers) && !treated; i++ {
+			handler := s.marathonEventHandlers[i]
 			if handler.Accept(event) {
 				log.Println("Handler", &handler, "handle event", event)
 				treated = true
@@ -60,35 +84,4 @@ func (h *Httphandler) Handler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Unhandled event", event, ", unable to extract projet name from AppId", event.AppId)
 	}
 
-}
-
-func (m *abstractEventHandler) Accept(marathonEvent commons.MarathonEvent) bool {
-	return strings.HasPrefix(marathonEvent.AppId, m.projectName)
-}
-
-type MarathonEventHandler interface {
-	Accept(marathonEvent commons.MarathonEvent) bool
-	Handle(marathonEvent commons.MarathonEvent)
-}
-
-type abstractEventHandler struct {
-	projectName          string
-	marathonEventChannel chan commons.MarathonEvent
-}
-
-func (a *abstractEventHandler) Handle(marathonEvent commons.MarathonEvent) {
-	log.Println("Push Marathon event", marathonEvent, "to channel")
-	a.marathonEventChannel <- marathonEvent
-}
-
-type EventTypeEventHandler struct {
-	abstractEventHandler
-	EventType string
-}
-
-func newEventTypeEventHandler(eventType string, marathonEventChannel chan commons.MarathonEvent) *EventTypeEventHandler {
-	res := new(EventTypeEventHandler)
-	res.EventType = eventType
-	res.marathonEventChannel = marathonEventChannel
-	return res
 }
