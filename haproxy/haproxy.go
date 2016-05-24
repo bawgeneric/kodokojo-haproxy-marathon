@@ -50,7 +50,7 @@ func (h *haProxyConfigurator) ReloadHaProxyWithConfiguration(haConfiguration str
 		}
 	}
 
-	for _, project := range haProxyContext.Projects {
+	for _, project := range haProxyContext.ProjectSet {
 		for _, entry := range project.HaProxyHTTPEntries {
 			key := h.generateKey(project.ProjectName, entry.EntryName)
 			if _, exist := h.cache[key]; !exist {
@@ -101,7 +101,7 @@ defaults
 
 	option  dontlognull
 
-	timeout connect 5000ms
+	timeout connect 10000ms
 	timeout client 50000ms
 	timeout server 50000ms
 
@@ -111,7 +111,7 @@ frontend http-in
 	bind *:80
 	reqadd X-Forwarded-Proto:\ http
 {{range .Projects}}{{if .IsHTTPReady}}# BEGIN entries project {{.ProjectName}}{{$projectName := .ProjectName}}{{range .HaProxyHTTPEntries}}
-	acl host_{{$projectName}}_{{.EntryName}} hdr_beg(host) -i {{.EntryName}}.{{$projectName}}{{end}}{{range .HaProxyHTTPEntries}}
+	acl host_{{$projectName}}_{{.EntryName}} hdr_beg(host) -i {{.EntryName}}-{{$projectName}}{{end}}{{range .HaProxyHTTPEntries}}
 	use_backend {{.EntryName}}-{{$projectName}}-cluster-http if host_{{$projectName}}_{{.EntryName}}{{end}}
 # END entries project {{.ProjectName}}{{end}}{{end}}
 
@@ -127,7 +127,7 @@ frontend https-in
 	option http-server-close
 
 {{range .Projects}}{{if .IsHTTPReady}}# BEGIN entries project {{.ProjectName}}{{$projectName := .ProjectName}}{{range .HaProxyHTTPEntries}}
-	acl host_{{$projectName}}_{{.EntryName}} hdr_beg(host) -i {{.EntryName}}.{{$projectName}}{{end}}{{range .HaProxyHTTPEntries}}
+	acl host_{{$projectName}}_{{.EntryName}} hdr_beg(host) -i {{.EntryName}}-{{$projectName}}{{end}}{{range .HaProxyHTTPEntries}}
 	use_backend {{.EntryName}}-{{$projectName}}-cluster-http if host_{{$projectName}}_{{.EntryName}}{{end}}
 # END entries project {{.ProjectName}}{{end}}{{end}}
 
