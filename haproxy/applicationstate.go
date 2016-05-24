@@ -42,17 +42,9 @@ func (a *ApplicationsState) handleMarathonEventInHaProxyConfiguration(marathonEv
 	project, found := utils.GetAppIdMatchKodokojoProjectName(appId)
 	if found {
 		if project.HasEntity() {
-			services := a.serviceLocator.LocateServiceByProject(project.ProjectName)
+			services := a.serviceLocator.LocateAllService()
 			if len(services) > 0 {
-				previous, found := a.findProjectInHaProxyContext(a.haProxyCurrentContext, project.ProjectName)
-				if found {
-					if previous.LastChangedAd.Before(marathonEvent.Timestamp) {
-						a.UpdateServicesIfConfigurationChanged(services)
-					}
-				} else {
-					log.Println("Not able to found project for", project.ProjectName, "in current HaProcy Context")
-					a.UpdateServicesIfConfigurationChanged(services)
-				}
+				a.UpdateServicesIfConfigurationChanged(services)
 			} else {
 				log.Println("Not able to found service for", project.ProjectName, "Updating configuration for this project.")
 				service := commons.Service{ProjectName: project.ProjectName}
@@ -73,46 +65,28 @@ func (a *ApplicationsState) UpdateIfConfigurationChanged(service commons.Service
 }
 
 func (a *ApplicationsState) UpdateServicesIfConfigurationChanged(services []commons.Service) {
-	newState := a.haProxyCurrentContext
+	newState := commons.HaProxyContext{SyslogEntryPoint:a.haProxyCurrentContext.SyslogEntryPoint, ProjectSet:make(map[string]*commons.Project,0)}
 
 	var newConfig string
 
-	httpEntries := make(map[string][]commons.HaProxyEntry)
-	sshEntries := make(map[string][]commons.HaProxyEntry)
+	httpEntries := make(map[string][]commons.HaProxyEntry,0)
+	sshEntries := make(map[string][]commons.HaProxyEntry,0)
 
 	for _, service := range services {
-		if len(service.ProjectName) > 0 {
-			log.Println("Status for project", service.ProjectName, "may had changed.")
-			previousProject, found := a.findProjectInHaProxyContext(a.haProxyCurrentContext, service.ProjectName)
-			if !found {
-				previousProjectInNewState, foundInNewState := a.findProjectInHaProxyContext(newState, service.ProjectName)
-				previousProject = previousProjectInNewState
-				found = foundInNewState
-			}
-			if found {
-				previousProject.Version = service.Version
-				previousProject.LastConfigChangeAt = service.LastConfigChangeAt
-				previousProject.LastScalingAt = service.LastScalingAt
-				if len(service.HaProxyHTTPEntries) > 0 {
-					httpEntries[service.ProjectName] = append(service.HaProxyHTTPEntries, httpEntries[service.ProjectName]...)
-				}
-				if len(service.HaProxySSHEntries) > 0 {
-					sshEntries[service.ProjectName] = append(service.HaProxySSHEntries, sshEntries[service.ProjectName]...)
-				}
+		projectName := service.ProjectName
+		if len(projectName) > 0 {
+			log.Println("Status for project", projectName, "may had changed.")
 
-			} else {
-				log.Println(service.ProjectName, "is a new project.")
-				projectConfig := a.getSshConfiguration(service.ProjectName)
-				project := commons.Project{ProjectName: service.ProjectName,
-					SSHPort:            projectConfig.SshPort,
-					LastScalingAt:      service.LastScalingAt,
-					LastConfigChangeAt: service.LastConfigChangeAt,
-					Version:            service.Version}
+			projectConfig := a.getSshConfiguration(projectName)
+			project := commons.Project{ProjectName: projectName,
+				SSHPort:            projectConfig.SshPort,
+				LastScalingAt:      service.LastScalingAt,
+				LastConfigChangeAt: service.LastConfigChangeAt,
+				Version:            service.Version}
 
-				httpEntries[service.ProjectName] = append(httpEntries[service.ProjectName], service.HaProxyHTTPEntries...)
-				sshEntries[service.ProjectName] = append(sshEntries[service.ProjectName], service.HaProxySSHEntries...)
-				newState.AddProject(project)
-			}
+			httpEntries[projectName] = append(httpEntries[projectName], service.HaProxyHTTPEntries...)
+			sshEntries[projectName] = append(sshEntries[projectName], service.HaProxySSHEntries...)
+			newState.AddProject(project)
 		}
 	}
 
@@ -121,32 +95,28 @@ func (a *ApplicationsState) UpdateServicesIfConfigurationChanged(services []comm
 	log.Println("NewState =", &newState)
 	a.haProxyCurrentContext = newState
 	valueAdded := false
-	for i := 0; i < len(a.haProxyCurrentContext.Projects); i++ {
-		log.Println("Initial HTTP value", &(a.haProxyCurrentContext.Projects[i]))
-		log.Println("Adding haEntry for project", a.haProxyCurrentContext.Projects[i].ProjectName, httpEntries[a.haProxyCurrentContext.Projects[i].ProjectName], sshEntries[a.haProxyCurrentContext.Projects[i].ProjectName])
+	for projectName,project := range a.haProxyCurrentContext.ProjectSet {
+		log.Println("Initial HTTP value", &(project))
+		log.Println("Adding haEntry for project", projectName, httpEntries[projectName], sshEntries[projectName])
 		if !valueAdded {
-			valueAdded = len(httpEntries[a.haProxyCurrentContext.Projects[i].ProjectName]) > 0 || len(sshEntries[a.haProxyCurrentContext.Projects[i].ProjectName]) > 0
+			valueAdded = len(httpEntries[projectName]) > 0 || len(sshEntries[projectName]) > 0
 		}
-		a.haProxyCurrentContext.Projects[i].HaProxyHTTPEntries = httpEntries[a.haProxyCurrentContext.Projects[i].ProjectName]
-		a.haProxyCurrentContext.Projects[i].HaProxySSHEntries = sshEntries[a.haProxyCurrentContext.Projects[i].ProjectName]
+		project.HaProxyHTTPEntries = httpEntries[projectName]
+		project.HaProxySSHEntries = sshEntries[projectName]
 	}
 
 	if valueAdded {
 		newConfig = a.haProxyConfigurationGenerator.GenerateConfiguration(a.haProxyCurrentContext)
 		a.haProxyConfigurationGenerator.ReloadHaProxyWithConfiguration(newConfig, a.configuration, a.haProxyCurrentContext)
+	} else {
+		log.Println("No backend entries availables, abording reload of Haproxy configuration.")
 	}
 
 }
 
-func (a *ApplicationsState) findProjectInHaProxyContext(haProxyContext commons.HaProxyContext, projectName string) (res *commons.Project, found bool) {
-	found = false
-	for i := 0; i < len(haProxyContext.Projects) && !found; i++ {
-		if projectName == haProxyContext.Projects[i].ProjectName {
-			res = &(haProxyContext.Projects[i])
-			found = true
-		}
-	}
-	return res, found
+func (a *ApplicationsState) findProjectInHaProxyContext(haProxyContext commons.HaProxyContext, projectName string) (res *commons.Project) {
+	res = haProxyContext.ProjectSet[projectName]
+	return res
 }
 
 func (a *ApplicationsState) getSshConfiguration(projectName string) ProjectConfiguration {

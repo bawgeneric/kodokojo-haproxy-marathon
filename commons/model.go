@@ -3,12 +3,21 @@ package commons
 import "time"
 
 type HaProxyContext struct {
-	Projects         []Project
+	ProjectSet       map[string]*Project
 	SyslogEntryPoint string
 }
 
 func (h *HaProxyContext) AddProject(project Project) {
-	h.Projects = append(h.Projects, project)
+	h.ProjectSet[project.ProjectName] = &(project)
+}
+
+func (h HaProxyContext) Projects() (project []Project){
+	res := make([]Project, 0, len(h.ProjectSet))
+ 	for _,p := range h.ProjectSet {
+		res = append(res, *p);
+	}
+	project = res
+	return
 }
 
 type Project struct {

@@ -14,7 +14,7 @@ type MarathonServiceLocator struct {
 }
 
 func (m MarathonServiceLocator) LocateServiceByProject(projectName string) (res []commons.Service) {
-	url := m.marathonUrl + "/v2/apps?embed=apps.tasks&label=project,componentType"
+	url := m.marathonUrl + "/v2/apps?embed=apps.tasks&label=project,component"
 	if len(projectName) > 0 {
 		url = url + ",project==" + projectName
 	}
@@ -61,10 +61,10 @@ func (m MarathonServiceLocator) ExtractServiceFromJson(dataJson []byte) (res []c
 				}
 			}
 			if len(httpBackends) > 0 {
-				haProxyHTTPEntries = append(haProxyHTTPEntries, commons.HaProxyEntry{EntryName: app.Labels.ComponentType, Backends: httpBackends})
+				haProxyHTTPEntries = append(haProxyHTTPEntries, commons.HaProxyEntry{EntryName: app.Labels.Component, Backends: httpBackends})
 			}
 			if len(sshBackends) > 0 {
-				haProxySSHEntries = append(haProxySSHEntries, commons.HaProxyEntry{EntryName: app.Labels.ComponentType, Backends: sshBackends})
+				haProxySSHEntries = append(haProxySSHEntries, commons.HaProxyEntry{EntryName: app.Labels.Component, Backends: sshBackends})
 			}
 			res = append(res, commons.Service{ProjectName: project.ProjectName, Version: app.Version, LastConfigChangeAt: app.VersionInfo.LastConfigChangeAt, LastScalingAt: app.VersionInfo.LastConfigChangeAt, HaProxySSHEntries: haProxySSHEntries, HaProxyHTTPEntries: haProxyHTTPEntries})
 		}
