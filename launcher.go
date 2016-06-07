@@ -14,6 +14,7 @@ import (
 var (
 	port                int
 	marathonUrl         string
+	marathonQuery       string
 	haProxyCfgPath      string
 	marathonCallbackUrl string
 	templatePath        string
@@ -24,6 +25,7 @@ func main() {
 
 	flag.IntVar(&port, "httpPort", 8080, "port number to listen")
 	flag.StringVar(&marathonUrl, "marathonUrl", "http://localhost:8080", "Url to connect to Marathon API")
+	flag.StringVar(&marathonQuery, "marathonQuery", "", "Specify query send to Marathon to filter Backend services")
 	flag.StringVar(&haProxyCfgPath, "haProxyCfgPath", "/usr/local/etc/haproxy/haproxy.cfg", "haproxy.cfg configuration Path")
 	flag.StringVar(&marathonCallbackUrl, "marathonCallbackUrl", "", "Marathon callback Url which will be registered on marathon")
 	flag.StringVar(&templatePath, "templatePath", "", "Path to the template file use to generate HA proxy configuration")
@@ -68,6 +70,7 @@ func main() {
 
 	log.Println("Marathon url		:", config.MarathonUrl())
 	log.Println("Marathon callback		:", config.MarathonCallbackUrl())
+	log.Println("Template path		:", config.TemplatePath())
 
 	services := locator.LocateAllService()
 	applicationState.UpdateServicesIfConfigurationChanged(services)

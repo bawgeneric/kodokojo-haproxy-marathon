@@ -10,11 +10,17 @@ import (
 )
 
 type MarathonServiceLocator struct {
-	marathonUrl string
+	marathonUrl   string
+	marathonQuery string
 }
 
 func (m MarathonServiceLocator) LocateServiceByProject(projectName string) (res []commons.Service) {
-	url := m.marathonUrl + "/v2/apps?embed=apps.tasks&label=project,component"
+	url := m.marathonUrl + "/v2/apps?embed=apps.tasks&"
+	if len(m.marathonQuery) > 0 {
+		url = url + m.marathonQuery
+	} else {
+		url = url + "label=project,component"
+	}
 	if len(projectName) > 0 {
 		url = url + ",project==" + projectName
 	}
