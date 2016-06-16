@@ -9,6 +9,7 @@ import (
 	"github.com/kodokojo/kodokojo-haproxy-marathon/utils"
 	"log"
 	"net"
+	"time"
 )
 
 var (
@@ -72,8 +73,14 @@ func main() {
 	log.Println("Marathon callback		:", config.MarathonCallbackUrl())
 	log.Println("Template path		:", config.TemplatePath())
 
-	services := locator.LocateAllService()
-	applicationState.UpdateServicesIfConfigurationChanged(services)
+	marathonUpdater := time.NewTicker(time.Millisecond * 1000)
+	go func() {
+		for t := range marathonUpdater.C {
+			log.Println("Update marathon State", t)
+			services := locator.LocateAllService()
+			applicationState.UpdateServicesIfConfigurationChanged(services)
+		}
+	}()
 
 	marathon.RegisterMarathon(config)
 	applicationState.Start(marathonEventChannel)
